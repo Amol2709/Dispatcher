@@ -6,6 +6,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import re
+
 from bs4 import BeautifulSoup
 from sklearn import preprocessing
 from tqdm import tqdm
@@ -14,10 +15,15 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from datetime import date
 from datetime import datetime
 
+
 from CustomCallBack import MyCallback
 
 ###################################################################################################################################
 import tensorflow_hub as hub
+import matplotlib.pyplot as plt
+from sklearn.utils import class_weight
+
+
 
 
 #####################################################################################################################################3
@@ -55,6 +61,28 @@ class ReTraining:
 
 		#self.training_desc = list(self.df['desc'])
 		self.clean_train_desc = list(self.df['desc'])
+
+
+		##########################################################################################################################################################
+
+		self.DICT ={}
+		for i in range(0,len(self.x)):
+			self.DICT[list(self.le.classes_)[i]] = list(self.Labels)[i]
+		y_helper = []
+		T=list(self.df[self.status])
+		for i in range(0,len(T)):
+			y_helper.append(self.DICT[T[i]])
+
+
+		class_weights = class_weight.compute_class_weight('balanced',self.Labels,y_helper)
+		self.class_weights = dict(enumerate(class_weights))
+
+
+		######################################################################################################################################################
+
+
+
+		
 		
 		print("*"*100)
 		print('Data Preparing Finished')
@@ -120,8 +148,20 @@ class ReTraining:
 		######################################################################################################################################
 
 
-		history = self.model.fit(np.array(self.clean_train_desc), self.train_label, epochs=self.num_epochs,callbacks=[callbacks])
+		self.history = self.model.fit(np.array(self.clean_train_desc), self.train_label, epochs=self.num_epochs,callbacks=[callbacks],class_weight=self.class_weights,shuffle=True)
 		scores = self.model.evaluate(np.array(self.clean_train_desc),self.train_label)
+
+		##################################################################################################################################################
+		plt.plot(self.history.history['accuracy'])
+		plt.plot(self.history.history['loss'])
+		plt.title('model Detail: {}'.format(self.status))
+		plt.ylabel('accuracy')
+		plt.xlabel('epoch')
+		plt.legend(['accuracy', 'loss'], loc='upper left')
+		plt.savefig('model Detail_{}.jpg'.format(self.status))
+		############################################################################################################################################################
+
+
 
 
 		##########################################################################################################################################

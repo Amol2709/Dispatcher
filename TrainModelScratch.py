@@ -18,6 +18,9 @@ from CustomCallBack import MyCallback
 
 ###############################################################################################################
 import tensorflow_hub as hub
+from sklearn.utils import class_weight
+import matplotlib.pyplot as plt
+
 
 
 ###############################################################################################################
@@ -61,6 +64,25 @@ class TrainModelScratch:
 
 		
 		self.clean_train_desc = list(self.df['desc'])
+
+
+
+		#########################################################################################################################################################
+
+		self.DICT ={}
+		for i in range(0,len(self.x)):
+			self.DICT[list(self.le.classes_)[i]] = list(self.Labels)[i]
+		y_helper = []
+		T=list(self.df[self.status])
+		for i in range(0,len(T)):
+			y_helper.append(self.DICT[T[i]])
+
+
+		class_weights = class_weight.compute_class_weight('balanced',self.Labels,y_helper)
+		self.class_weights = dict(enumerate(class_weights))
+
+
+		##################################################################################################################################################
 		
 		print('Data Preparing Finished.....')
 
@@ -86,9 +108,15 @@ class TrainModelScratch:
 
 		#self.model.add(tf.keras.layers.Dense(128, activation='relu'))
 		#self.model.add(tf.keras.layers.Dropout(0.3))
-		self.model.add(tf.keras.layers.Dense(4*len(self.Labels), activation='relu'))
+		self.model.add(tf.keras.layers.Dense(128, activation='relu'))
+		self.model.add(tf.keras.layers.Dense(512, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(512, activation='relu'))
+		#self.model.add(tf.keras.layers.Dense(8*len(self.Labels), activation='relu'))
+		#self.model.add(tf.keras.layers.Dense(4*len(self.Labels), activation='relu'))
 		self.model.add(tf.keras.layers.Dense(2*len(self.Labels), activation='relu'))
-		self.model.add(tf.keras.layers.Dropout(0.1))
+		
+		#self.model.add(tf.keras.layers.Dropout(0.1))
 		self.model.add(tf.keras.layers.Dense(len(self.Labels), activation='softmax'))
 		self.model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
 		self.model.summary()
@@ -149,20 +177,24 @@ class TrainModelScratch:
 		self.model = tf.keras.Sequential()
 
 		self.model.add(self.hub_layer)
-		self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
-		self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
-		self.model.add(tf.keras.layers.Dense(512, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(512, activation='relu'))
 		
-		self.model.add(tf.keras.layers.Dense(512, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(512, activation='relu'))
 		
 
 
 
 
-		self.model.add(tf.keras.layers.Dense(128, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(128, activation='relu'))
 		#self.model.add(tf.keras.layers.Dropout(0.3))
+		self.model.add(tf.keras.layers.Dense(128, activation='relu'))
+		self.model.add(tf.keras.layers.Dense(512, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(1024, activation='relu'))
+		# self.model.add(tf.keras.layers.Dense(512, activation='relu'))
 		self.model.add(tf.keras.layers.Dense(2*len(self.Labels), activation='relu'))
-		self.model.add(tf.keras.layers.Dropout(0.1))
+		#self.model.add(tf.keras.layers.Dropout(0.1))
 		self.model.add(tf.keras.layers.Dense(len(self.Labels), activation='softmax'))
 		self.model.compile(loss='categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
 		self.model.summary()
@@ -203,8 +235,19 @@ class TrainModelScratch:
 		#############################################################################################################################
 
 
-		history = self.model.fit(np.array(self.clean_train_desc), self.train_label, epochs=self.num_epochs,callbacks=[callbacks])
+		self.history = self.model.fit(np.array(self.clean_train_desc), self.train_label, epochs=self.num_epochs,callbacks=[callbacks],class_weight=self.class_weights,shuffle=True)
 		scores = self.model.evaluate(np.array(self.clean_train_desc),self.train_label)
+
+		##############################################################################################################
+		plt.plot(self.history.history['accuracy'])
+		plt.plot(self.history.history['loss'])
+		plt.title('model Detail: {}'.format(self.status))
+		plt.ylabel('accuracy')
+		plt.xlabel('epoch')
+		plt.legend(['accuracy', 'loss'], loc='upper left')
+		plt.savefig('model Detail_{}.jpg'.format(self.status))
+
+		###############################################################################################################
 
 		
 		#############################################################################################################################

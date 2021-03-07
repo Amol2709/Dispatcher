@@ -13,7 +13,7 @@ class Decide:
 		print('*'*100)
 		print('Establishing Connection with Database and fecthin data..')
 		db_connection = sql.connect(host='localhost', database='my-db', user='root', password='root@123root@123',port=3307)
-		self.df=pd.read_sql('SELECT * FROM finalmaindb', con=db_connection)
+		self.df=pd.read_sql('SELECT * FROM fullcleanviacom', con=db_connection)
 		#self.df = pd.read_excel('viacomdatacleanup.xlsx', engine='openpyxl',sheet_name='Sheet1')
 		#self.DF= self.df.copy()
 		#self.length= self.df.count()[0]

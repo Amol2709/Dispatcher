@@ -31,7 +31,7 @@ import tensorflow_hub as hub
 ############# Only Assumption is database is upto date and neat and clean-------------------------
 class reTrain:
 	def __init__(self):
-		self.epoch = 5
+		self.epoch = 50#100
 		pass
 	def checkForAG(self):
 		
@@ -112,13 +112,13 @@ class reTrain:
 # main_obj = reTrain()
 # main_obj.checkForAG()
 # main_obj.checkForTag()
-#---------------------------------------
+# # # #---------------------------------------
 pred_obj_1 = Predict('assignment_group')
 pred_obj_2 = Predict('cleaned_tags')
 
 
 
-sent = ['uwf ctp failed jobs alert transformjobhello app ops team details failed catapult jobs last minutes job type transformjob please take high priority ctpjobid external tracking data process start time last error multistep reported multistep reported vantage reported message reported child ctpjobid parent multistepjob message reported child ctpjobid parent multistepjob accurate ctpjobid external tracking data process start time last error multistep reported multistep reported vantage reported source conform error invalid duration message reported child ctpjobid parent multistepjob message reported child ctpjobid parent multistepjob accurate ctpjobid external tracking data process start time last error multistep reported error post processing unable move output file expected location multistep job completed output file not exist wip directory message reported child ctpjobid parent multistepjob accurate ctpjobid external tracking data na process start time last error multistep reported vantage reported message reported child ctpjobid parent multistepjob accurate ctpjobid external tracking data na process start time last error vantage reported accurate ctpjobid external tracking data na process start time last error error post processing unable move output file expected location multistep job completed output file not exist wip directory accurate ctpjobid external tracking data na process start time last error multistep reported vantage reported source conform error invalid duration message reported child ctpjobid parent multistepjob accurate ctpjobid external tracking data na process start time last error vantage reported source conform error invalid duration accurate note auto generated email please not reply mailbox not monitored']
+sent = ['Skype Not working Skype application was hanging from past couple of days now I it is giving some weird error']
 
 import re
 from bs4 import BeautifulSoup
@@ -177,7 +177,7 @@ pred_tag,per_tag=pred_obj_2.ModelPredictionTAG(sent)
 print("Predicted Group : {} with percentage {}".format(pred_ag,per_ag))
 print("Predicted Tag: {} with percentage {}".format(pred_tag,per_tag))
 
-# #-----------------------------------------------------------------------------
+# # #-----------------------------------------------------------------------------
 
 # Acc_ag = AgAccuracy('assignment_group')
 # Acc_tag = TagAccuracy('cleaned_tags')

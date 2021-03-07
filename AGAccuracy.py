@@ -29,7 +29,7 @@ class AgAccuracy:
 	def __init__(self,status):
 		self.status = status
 		db_connection = sql.connect(host='localhost', database='my-db', user='root', password='root@123root@123',port=3307)
-		self.df=pd.read_sql('SELECT * FROM finalmaindb', con=db_connection)
+		self.df=pd.read_sql('SELECT * FROM fullcleanviacom', con=db_connection)
 		
 		print("*"*100)
 		#print('Data Preparing Started')
