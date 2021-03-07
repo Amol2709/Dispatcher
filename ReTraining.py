@@ -1,3 +1,7 @@
+# import warnings
+
+# warnings.filterwarnings('ignore')
+ 
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -7,42 +11,27 @@ from sklearn import preprocessing
 from tqdm import tqdm
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-#warnings.filterwarnings("ignore", category=DeprecationWarning)
+from datetime import date
+from datetime import datetime
 
+from CustomCallBack import MyCallback
+
+###################################################################################################################################
+import tensorflow_hub as hub
+
+
+#####################################################################################################################################3
+#warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class ReTraining:
 	def __init__(self,df,status):
 		self.df = df
 		self.status = status
-		if self.status == 'cleaned_tags':
-			self.df=self.df.dropna(how='any')
-		else:
-			pass
-	def decontracted(self,phrase):
-		self.phrase = phrase
-		self.phrase = re.sub(r"won't", "will not", self.phrase)
-		self.phrase = re.sub(r"can\'t", "can not", self.phrase)
-		self.phrase = re.sub(r"n\'t", " not", self.phrase)
-		self.phrase = re.sub(r"\'re", " are", self.phrase)
-		self.phrase = re.sub(r"\'s", " is", self.phrase)
-		self.phrase = re.sub(r"\'d", " would", self.phrase)
-		self.phrase = re.sub(r"\'ll", " will", self.phrase)
-		self.phrase = re.sub(r"\'t", " not", self.phrase)
-		self.phrase = re.sub(r"\'ve", " have", self.phrase)
-		self.phrase = re.sub(r"\'m", " am", self.phrase)
-		return self.phrase
-	def cleaning(self):
 		print("*"*100)
-		print('Data CLeaning Started')
-		self.df['short_desc'] = self.df['short_desc'].astype(str)
-		self.df['long_desc'] = self.df['long_desc'].astype(str)
-		self.df['desc'] = self.df['short_desc'] + self.df['long_desc']
-		self.df[self.status] = self.df[self.status].astype(str)
+		print('Data Preparing Started')
+		
 		self.df = self.df[["desc",self.status]]
-		self.df=self.df.dropna(how='any')
-		self.df=self.df.loc[self.df[self.status]!='0']
-		self.df=self.df.reset_index()
-		del self.df['index']
+		
 		self.A=dict(self.df[self.status].value_counts())
 		self.x=list(self.A.keys()) # number of new tags
 		self.y= list(self.A.values())
@@ -55,8 +44,7 @@ class ReTraining:
 		a =self.Labels.copy()
 		b = np.zeros((a.size, a.max()+1))
 		b[np.arange(a.size),a] = 1
-		#print(b.shape)
-		#print(list(self.le.classes_))
+		
 
 		self.train_label = np.zeros((self.df.count()[0],len(self.Labels)))
 		#print(list(self.le.classes_))
@@ -65,43 +53,11 @@ class ReTraining:
 			Index=list(self.le.classes_).index(self.df[self.status][i])
 			self.train_label[i,:] = b[Index,:]
 
-		self.training_desc = list(self.df['desc'])
-
-		stopwords= set(['br', 'the', 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've",\
-            "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', \
-            'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them', 'their',\
-            'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll", 'these', 'those', \
-            'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', \
-            'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', \
-            'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after',\
-            'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further',\
-            'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',\
-            'most', 'other', 'some', 'such', 'only', 'own', 'same', 'so', 'than', 'too', 'very', \
-            's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o', 're', \
-            've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn', "doesn't", 'hadn',\
-            "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn',\
-            "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", \
-            'won', "won't", 'wouldn', "wouldn't"])
-
-
-		self.clean_train_desc = []
-		count = 0
-		for sentance in tqdm(self.df['desc'].values):
-			try:
-				sentance = re.sub(r"http\S+", "", sentance)
-				sentance = BeautifulSoup(sentance, "html.parser").get_text()
-				sentance = self.decontracted(sentance)
-				sentance = re.sub("\S*\d\S*", "", sentance).strip()
-				sentance = re.sub('[^A-Za-z]+', ' ', sentance)
-				sentance = ' '.join(e.lower() for e in sentance.split() if e.lower() not in stopwords)
-				self.clean_train_desc.append(sentance.strip())
-			except:
-				print(sentance)
-				print(count)
-			else:
-				count= count+1
+		#self.training_desc = list(self.df['desc'])
+		self.clean_train_desc = list(self.df['desc'])
+		
 		print("*"*100)
-		print('Data Cleaning Finished')
+		print('Data Preparing Finished')
 
 	def LoadAGModel(self,trained_model):
 		print("*"*100)
@@ -116,7 +72,13 @@ class ReTraining:
 
 
 		self.trained_model = trained_model
-		self.model = tf.keras.models.load_model(self.trained_model)
+		##########################################################################################################################################
+
+
+		self.model = tf.keras.models.load_model(self.trained_model,custom_objects={'KerasLayer': hub.KerasLayer})
+
+
+		#############################################################################################################################################
 		self.model.summary()
 
 
@@ -126,32 +88,92 @@ class ReTraining:
 		print("*"*100)
 		print('Loading Old ML Tag Model From Disk For ReTraining ............')
 		self.trained_model = trained_model
-		self.model = tf.keras.models.load_model(self.trained_model)
+
+		#############################################################################################################################################
+
+
+		self.model = tf.keras.models.load_model(self.trained_model,custom_objects={'KerasLayer': hub.KerasLayer})
+
+		##############################################################################################################################################
 		self.model.summary()
 
 
-	def ModelTraining(self,name,epoch=5):
+	def ModelTraining(self,name,epoch=1):
 		print("*"*100)
 		print('ReTraining Started............')
 		self.num_epochs = epoch
 		self.name=name
 		
-		vocab_size = 1500
-		embedding_dim = 32
-		max_length = 150
-		trunc_type='post'
-		oov_tok = "<OOV>"
-		tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_tok)
-		tokenizer.fit_on_texts(self.clean_train_desc)
+		# vocab_size = 1500
+		# embedding_dim = 32
+		# max_length = 150
+		# trunc_type='post'
+		# oov_tok = "<OOV>"
+		# self.tokenizer = Tokenizer(num_words = vocab_size, oov_token=oov_tok)
+		# self.tokenizer.fit_on_texts(self.clean_train_desc)
 
-		word_index = tokenizer.word_index
-		clean_train_sequences = tokenizer.texts_to_sequences(self.clean_train_desc)
-		self.clean_train_padded = pad_sequences(clean_train_sequences,maxlen=max_length, truncating=trunc_type)
-		history = self.model.fit(self.clean_train_padded, self.train_label, epochs=self.num_epochs)
-		scores = self.model.evaluate(self.clean_train_padded,self.train_label)
+		# word_index = self.tokenizer.word_index
+		# clean_train_sequences = self.tokenizer.texts_to_sequences(self.clean_train_desc)
+		# self.clean_train_padded = pad_sequences(clean_train_sequences,maxlen=max_length, truncating=trunc_type)
+
+		callbacks = MyCallback()
+		######################################################################################################################################
+
+
+		history = self.model.fit(np.array(self.clean_train_desc), self.train_label, epochs=self.num_epochs,callbacks=[callbacks])
+		scores = self.model.evaluate(np.array(self.clean_train_desc),self.train_label)
+
+
+		##########################################################################################################################################
 		print("Accuracy: %.2f%%" % (scores[1]*100))
+		############################################################################################################################################
+		#...just make sure this
 		self.model.save(self.name+'.h5')
+		#############################################################################################################################################
 		print('model save succesfully')
+
+
+	# def ModelPredictionAG(self):
+	# 	print('*'*50)
+	# 	print('Prediction on AG : .........................................')
+	# 	max_length = 150
+	# 	trunc_type='post'
+	# 	cross_check=3
+	# 	self.seed_text = self.clean_train_desc[cross_check]
+	# 	#self.seed_text = seed_text
+	# 	token_list = self.tokenizer.texts_to_sequences([self.seed_text])[0]
+	# 	token_list = pad_sequences([token_list], maxlen=max_length, truncating=trunc_type)
+	# 	re_model = tf.keras.models.load_model('Assignmentgroup_model.h5')
+	# 	predicted = re_model.predict(token_list,verbose=0)
+
+	# 	print("Model Prediction : {}".format(list(self.le.classes_)[np.argmax(predicted)]))
+	# 	print("Original Tag:      {}".format(self.df.iloc[cross_check][self.status]))
+
+
+	# def ModelPredictionTAG(self):
+	# 	print('*'*50)
+	# 	print('Prediction on TAG : .........................................')
+	# 	max_length = 150
+	# 	trunc_type='post'
+	# 	cross_check=3
+	# 	self.seed_text = self.clean_train_desc[cross_check]
+	# 	#self.seed_text = seed_text
+	# 	token_list = self.tokenizer.texts_to_sequences([self.seed_text])[0]
+	# 	token_list = pad_sequences([token_list], maxlen=max_length, truncating=trunc_type)
+	# 	re_model = tf.keras.models.load_model('ML_TAGmodel.h5')
+	# 	predicted = re_model.predict(token_list,verbose=0)
+
+	# 	#print(predicted)
+	# 	#print(len(list(self.le.classes_)))
+	# 	#print(np.argmax(predicted))
+
+	# 	#print(list(self.le.classes_)[np.argmax(predicted)])
+
+	# 	print("Model Prediction : {}".format(list(self.le.classes_)[np.argmax(predicted)]))
+	# 	print("Original Tag:      {}".format(self.df.iloc[cross_check][self.status]))
+
+
+
 
 
 
